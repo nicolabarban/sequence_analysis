@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Sequence Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Nicola Barban   Alma Mater Studiorum Università di Bologna   Dipartimento di Scienze Statistiche" />
+    <meta name="date" content="2021-04-08" />
+    <link href="lectureSA_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="lectureSA_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="lectureSA_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Sequence Analysis
+## A (practical) introduction
+### Nicola Barban <br> Alma Mater Studiorum Università di Bologna <br> Dipartimento di Scienze Statistiche
+### 8 April 2021<br> <img src="../img/UniBo-Universita-di-Bologna.png" style="width:20.0%" />
+
+---
+
+# Outline
+ * **Introduction to Sequence Analysis in social sciences**
+  - SA as description tool for life course trajectories
+  - Measuring distances among trajectories (Optimal Matching)
+  - Data reduction (clustering)
+  
+* **R code available [here:]("lectureSA.R") **
+* **Examples based on: **
+&gt; Sironi, Maria, Nicola Barban, Luca Maria Pesando, and Frank Furstenberg. 2020. "A Sequence-Analysis Approach to the Study of the Transition to Adulthood in Low- and Middle-Income Countries." University of Pennsylvania Population Center Working Paper (PSC/PARC), 2020-48. https://repository.upenn.edu/psc_publications/48.
+---
+
+
+# Life course paradigm
+
+* The life course paradigm (Elder, 1985, 1994; Giele and Elder, 1998):
+individuals, as human agents, build their future on the basis of the constraints and opportunities experienced in the past
+* The process is iterative and cumulative, since initial advantages or disadvantages often are amplified with time
+* Life courses are embedded in different time and location affected by the social context in which individuals live life domains are strongly interdependent.
+
+---
+# Transitions
+
+## **Transitions**
+* A transition is a discrete life change or event within a trajectory (e.g., from single to married).
+* Transitions are often accompanied by socially shared ceremonies and rituals, such as a graduation or a wedding ceremony
+
+&lt;img src="img/laurea.jpg" alt="" class="center"    width="350"  height="350" &gt;
+
+---
+# Trajectories
+## **Trajectories**
+* A trajectory can also be envisioned as a sequence of transitions that are enacted over time
+* A trajectory is a sequence of linked states within a conceptually defined range of behavior or experience.
+* A trajectory is a long-term pathway, with age-graded patterns of development in major social institutions such as education or family
+
+&gt; Taking the whole trajectory as an input in statistical analysis is not straightforward (George, 2009).
+
+&lt;img src="img/lifecourse.jpg" alt="" class="center"    width="300"  height="300" &gt;
+---
+# Life course analysis
+
+Life course analysis is the statistical analysis of data on:
+1. the **timing** of events (when do events happen?),
+2. their **quantum** (how many events happen?).
+3. and their **sequencing** (in which order do events happen?)
+
+---
+# Sequence analysis
+
+* In the 1990s Abbott introduced sequence analysis in the social sciences. Origins in information science and computational biology (DNA) (Abbott, 1995)
+* Life courses are represented in terms of sequences of states (time is intrinsically discrete)
+* As a simple example, we shall consider three states: single (**S**), cohabiting (**C**), married (**M**), in a monthly time scale from age 20 to 24. The sequence representation of an individual life course may thus be: **SSSSSSCCCCCCCSSSSSSSSSSSSSSSSSSSSSSCCCSSSSSSSSSSSMMMMMMMMM**
+
+****
+&gt; Sequence analysis is a set of techniques for **describing and analyze trajectories**
+
+---
+&lt;img src="../img/seqs.png" alt="" class="center"    width="750"  height="350" &gt;
+---
+# how to import sequences in R
+
+```r
+library(TraMineR)
+library(tidyverse)
+library(knitr)
+library(ggsci)
+
+df&lt;-read_csv("data_EE.csv")
+colors=pal_npg("nrc", alpha = .9)(9)[c(1:4,7)]
+labels=c("No Sex-No Union","Sex- No Union","Union-No Sex","No Children","Children")
+scode=c("NoSex-NoUn","Sex-NoUn","Un-NoSex","NoChild", "Child")
+
+*seqdata=seqdef(df[,19:37],
+               cnames=12:30,
+               cpal=colors,
+               missing=NA,
+               states=scode,
+               labels=labels,
+               missing.color="white", 
+               weights=df$aw)
+```
+---
+
+
+```r
+example &lt;- seqdata[1:5,1:10]
+kable(example)
+```
+
+
+
+|12         |13         |14         |15         |16         |17         |18         |19         |20         |21         |
+|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|
+|NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |Sex-NoUn   |Sex-NoUn   |
+|NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |Un-NoSex   |NoChild    |NoChild    |Child      |Child      |
+|NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |
+|NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |
+|NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoSex-NoUn |NoChild    |NoChild    |NoChild    |
+---
+# State Permanence Sequence (SPS) representation
+
+```r
+*seqformat(example, from = "STS", to = "SPS",compress = TRUE)
+```
+
+```
+##     Sequence                                           
+## [1] "(NoSex-NoUn,8)-(Sex-NoUn,2)"                      
+## [2] "(NoSex-NoUn,5)-(Un-NoSex,1)-(NoChild,2)-(Child,2)"
+## [3] "(NoSex-NoUn,10)"                                  
+## [4] "(NoSex-NoUn,10)"                                  
+## [5] "(NoSex-NoUn,7)-(NoChild,3)"
+```
+---
+# Distinct States Sequence (DSS)
+
+```r
+seqdss(example)
+```
+
+```
+##   Sequence                         
+## 1 NoSex-NoUn-Sex-NoUn              
+## 2 NoSex-NoUn-Un-NoSex-NoChild-Child
+## 3 NoSex-NoUn                       
+## 4 NoSex-NoUn                       
+## 5 NoSex-NoUn-NoChild
+```
+---
+# Describe sequences
+
+
+```r
+seqIplot(example)
+```
+
+&lt;img src="lectureSA_files/figure-html/unnamed-chunk-5-1.png" width="60%" /&gt;
+
+---
+# Distribution Plot
+
+```r
+seqdplot(seqdata)
+```
+
+&lt;img src="lectureSA_files/figure-html/unnamed-chunk-6-1.png" width="60%" /&gt;
+
+
+
+---
+# Mean time 
+
+```r
+seqmtplot(seqdata)
+```
+
+&lt;img src="lectureSA_files/figure-html/unnamed-chunk-7-1.png" width="60%" /&gt;
+
+---
+# Derive age at events
+```
+duration&lt;-seqistatd(seqdata)
+```
+
+
+&lt;img src="lectureSA_files/figure-html/unnamed-chunk-8-1.png" width="60%" /&gt;
+---
+# Calculate time between events
+&lt;img src="lectureSA_files/figure-html/unnamed-chunk-9-1.png" width="60%" /&gt;
+---
+
+class: center, inverse
+background-image: url("img/TimeAtEvents.png")
+
+
+
+---
+# Categorical time series
+**Life course trajectories can be described as categorical time series**
+
+* Each individual `\(i\)` can be associated to a variable sit indicating her/his life course status at time `\(t\)`.
+* As one can assume that `\(s_{it}\)` takes a finite number of values, trajectories can be described as categorical time series.
+* More formally, let us define a discrete-time stochastic process `\(S_t\)` : `\(t ∈ T\)` with state-space `\(Σ = {σ_1,\ldots, σ_K}\)` with realizations `\(s_{it}\)` and `\(i = 1\)`. The life course trajectory of individual `\(i\)` is described by the sequence `\(si = {s_{i1} . . . s_{iT} }\)`.
+---
+# Distance between categorical time series
+
+**How to compare life trajectories?**
+
+&gt; The **Levenshtein distance** between two strings is defined as the minimum number of edits needed to transform one string into the other, with the allowable edit operations being **insertion**, **deletion**, or **substitution** of a single character. It is named after Vladimir Levenshtein, who considered this distance in 1965.(Wikipedia)
+
+https://phiresky.github.io/levenshtein-demo/
+
+---
+# Optimal Matching
+
+* Andrew Abbott introduce the idea of sequence analysis in social science
+* Great intuition! setting **different substitution costs**. Not all transitions are equal!
+* First applications with costs based on theory
+
+&lt;img src="img/abbottAJS1990.png" alt="Abbott, American Journal of Sociology, 1990" class="centered image"   width="350"  height="350"&gt;
+
+
+---
+# Computing distances
+A set that is composed of three basic operations `\(Ω = {ι,δ,σ}\)`,
+1. `\(ι\)` denotes **insertion** (one state is inserted into the sequence)
+2. `\(δ\)` denotes **deletion** (one state is deleted from the sequence)
+3. `\(σ\)` denotes **substitution** (one state is replaced by another
+state).
+
+****
+
+* To each of these elementary operations `\(ω_k ∈ Ω,\)` a specific
+cost can be assigned, `\(c(ω_k)\)`.
+
+
+* If `\(K\)` basic operations must be performed to transform one sequence into another the transformation cost can be computed as `\(c(ω_1,\ldots, ω_K) = \sum^K_{k=1} c(ωk).\)`
+
+
+### The **Matrix of dissimilarities** `\((NxN)\)` includes all the pairwise distances 
+
+---
+# what choice of costs?
+* **substitution costs** can be derived from theory (e.g. occupational prestige, military ranking)
+* using **inverse transition rates** (i.e. rare transitions have "higher costs")
+
+```r
+submat&lt;-seqsubm(seqdata, method="TRATE", with.missing=TRUE)
+
+kable(submat)
+```
+
+
+
+|             | NoSex-NoUn-&gt;| Sex-NoUn-&gt;| Un-NoSex-&gt;| NoChild-&gt;|  Child-&gt;| *-&gt;|
+|:------------|------------:|----------:|----------:|---------:|--------:|---:|
+|NoSex-NoUn-&gt; |     0.000000|   1.961658|   1.985854|  1.940990| 1.991982|   2|
+|Sex-NoUn-&gt;   |     1.961658|   0.000000|   2.000000|  1.746838| 1.932960|   2|
+|Un-NoSex-&gt;   |     1.985854|   2.000000|   0.000000|  1.595756| 1.687003|   2|
+|NoChild-&gt;    |     1.940990|   1.746838|   1.595756|  0.000000| 1.524420|   2|
+|Child-&gt;      |     1.991982|   1.932960|   1.687003|  1.524420| 0.000000|   2|
+|*-&gt;          |     2.000000|   2.000000|   2.000000|  2.000000| 2.000000|   0|
+---
+# Computing distances
+
+
+```r
+*dist.om1=seqdist(seqdata,
+                 method="OM",
+                 indel=1,
+                 sm=submat,
+                 with.missing=TRUE)
+kable(dist.om1[1:8,1:8], digits=2)
+```
+
+
+
+|      |      |      |      |      |      |      |      |
+|-----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|
+|  0.00|  9.73|  3.96|  7.52| 11.53|  5.46| 11.99| 21.80|
+|  9.73|  0.00| 11.73| 12.00| 13.13|  6.00|  3.52| 27.78|
+|  3.96| 11.73|  0.00|  3.56| 12.14|  7.44| 13.99| 17.85|
+|  7.52| 12.00|  3.56|  0.00| 13.93|  6.00| 14.00| 15.93|
+| 11.53| 13.13| 12.14| 13.93|  0.00| 12.68| 16.66| 23.50|
+|  5.46|  6.00|  7.44|  6.00| 12.68|  0.00|  8.00| 21.91|
+| 11.99|  3.52| 13.99| 14.00| 16.66|  8.00|  0.00| 29.82|
+| 21.80| 27.78| 17.85| 15.93| 23.50| 21.91| 29.82|  0.00|
+---
+# How to use dissimilarities?
+
+1. Describe groups
+2. Match individuals with similar trajectories
+3. Compute **typical trajectories** using data reduction techniques --&gt; cluster analysis
+
+
+```r
+library(cluster) 
+seq.clusterward = agnes(dist.om1, diss = T, method = "ward") 
+```
+---
+# Choose the number of clusters
+
+
+```r
+cl4 = cutree(seq.clusterward, k = 4)
+```
+&lt;img src="img/clusters_choice.png" alt="" class="center"   width="300"  height="300"&gt;
+
+
+```r
+wardRange &lt;- as.clustrange(dist.ward, diss = dist.om2, ncluster = 10, weights=data_sample$aw)
+summary(wardRange, max.rank = 2)
+plot(wardRange, stat = c("ASW", "HG", "PBC", "HC"))
+```
+
+
+---
+class: center
+&lt;img src="img/clusters_ALL.pdf" alt="" class="center"   width="650"  height="550"&gt;
+
+---
+class: center
+&lt;img src="img/clustersolution_meantime.pdf" alt="" class="center"   width="650"  height="550"&gt;
+
+---
+# Early Rapid Transition
+&lt;img src="img/cluster1map.pdf" alt="" class="center"   width="650"  height="550"&gt;
+
+---
+# Rapid Transition
+
+&lt;img src="img/cluster2map.pdf" alt="" class="center"   width="650"  height="550"&gt;
+---
+# Gradual Transition
+
+&lt;img src="img/cluster3map.pdf" alt="" class="center"   width="650"  height="550"&gt;
+---
+# Delayed Rapid transition
+&lt;img src="img/cluster4map.pdf" alt="" class="center"   width="650"  height="550"&gt;
+---
+# Describe prevalence over time
+&lt;img src="img/Fig5.eps" alt="" class="center"   width="650"  height="550"&gt;
+---
+# Additional analysis
+
+* Possible trajectories configuration are very high!
+* Cluster analysis is a way to reduce complexity in few categories
+* It is very common to combine cluster analysis with additional analyses:
+  1. cluster as **outcome variable**
+  2. cluster as **independent variable**
+  
+---
+# Example
+
+Association between log GDP and "Early Transition"
+&lt;img src="img/gdp_cl1.pdf" alt="" class="center"   width="650"  height="550"&gt;
+
+---
+# Conclusions
+
+* Sequence analysis focuses on **trajectories** (when, how much, and in what order)
+* Trajectories are **categorical time series**
+* Series of techniques to **describe and analyze** life course
+* Optimal matching most common metric to describe **dissimilarities**
+* Using cluster analysis trajectories are summarised in **typical trjectories**
+* Often the result of cluster analysis is used in further analysis, typically **multivariate regression**
+---
+class: center, invert
+
+## Questions?
+
+### n.barban@unibo.it
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
