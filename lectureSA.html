@@ -16,7 +16,7 @@ class: center, middle, inverse, title-slide
 # Sequence Analysis
 ## A (practical) introduction
 ### Nicola Barban <br> Alma Mater Studiorum Università di Bologna <br> Dipartimento di Scienze Statistiche
-### 8 April 2021<br> <img src="../img/UniBo-Universita-di-Bologna.png" style="width:20.0%" />
+### 8 April 2021<br> <img src="img/UniBo-Universita-di-Bologna.png" style="width:20.0%" />
 
 ---
 
@@ -73,11 +73,11 @@ Life course analysis is the statistical analysis of data on:
 * Life courses are represented in terms of sequences of states (time is intrinsically discrete)
 * As a simple example, we shall consider three states: single (**S**), cohabiting (**C**), married (**M**), in a monthly time scale from age 20 to 24. The sequence representation of an individual life course may thus be: **SSSSSSCCCCCCCSSSSSSSSSSSSSSSSSSSSSSCCCSSSSSSSSSSSMMMMMMMMM**
 
-****
-&gt; Sequence analysis is a set of techniques for **describing and analyze trajectories**
+
+### Sequence analysis is a set of techniques for **describing and analyzing trajectories**
 
 ---
-&lt;img src="../img/seqs.png" alt="" class="center"    width="750"  height="350" &gt;
+&lt;img src="img/seqs.png" alt="" class="center"    width="750"  height="350" &gt;
 ---
 # how to import sequences in R
 
@@ -87,6 +87,7 @@ library(tidyverse)
 library(knitr)
 library(ggsci)
 
+# Only data on Eastern Europe
 df&lt;-read_csv("data_EE.csv")
 colors=pal_npg("nrc", alpha = .9)(9)[c(1:4,7)]
 labels=c("No Sex-No Union","Sex- No Union","Union-No Sex","No Children","Children")
@@ -126,12 +127,12 @@ kable(example)
 ```
 
 ```
-##     Sequence                                           
-## [1] "(NoSex-NoUn,8)-(Sex-NoUn,2)"                      
-## [2] "(NoSex-NoUn,5)-(Un-NoSex,1)-(NoChild,2)-(Child,2)"
-## [3] "(NoSex-NoUn,10)"                                  
-## [4] "(NoSex-NoUn,10)"                                  
-## [5] "(NoSex-NoUn,7)-(NoChild,3)"
+##   Sequence                                           
+## 1 "(NoSex-NoUn,8)-(Sex-NoUn,2)"                      
+## 2 "(NoSex-NoUn,5)-(Un-NoSex,1)-(NoChild,2)-(Child,2)"
+## 3 "(NoSex-NoUn,10)"                                  
+## 4 "(NoSex-NoUn,10)"                                  
+## 5 "(NoSex-NoUn,7)-(NoChild,3)"
 ```
 ---
 # Distinct States Sequence (DSS)
@@ -192,7 +193,7 @@ duration&lt;-seqistatd(seqdata)
 ---
 
 class: center, inverse
-background-image: url("img/TimeAtEvents.png")
+background-image: url("img/TimeAtEvents.pdf")
 
 
 
@@ -310,7 +311,9 @@ cl4 = cutree(seq.clusterward, k = 4)
 
 
 ```r
-wardRange &lt;- as.clustrange(dist.ward, diss = dist.om2, ncluster = 10, weights=data_sample$aw)
+library(WeightedCluster )
+
+wardRange &lt;- as.clustrange(seq.clusterward, diss = dist.om2, ncluster = 10, weights=data_sample$aw)
 summary(wardRange, max.rank = 2)
 plot(wardRange, stat = c("ASW", "HG", "PBC", "HC"))
 ```
